@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+
+{% block title %}Pat.AI - 특허분석 AI{% endblock %}
+
+{% block content %}
+<div class="flex h-screen bg-gray-100">
+    <!-- Sidebar -->
+    <div class="w-80 bg-white shadow-lg flex flex-col" id="sidebar">
+        <!-- Header -->
+        <div class="p-4 border-b">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <div class="h-10 w-10 bg-blue-600 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-microscope text-white"></i>
+                    </div>
+                    <div class="ml-3">
+                        <h1 class="text-lg font-semibold">Pat.AI</h1>
+                        <p class="text-xs text-gray-500">특허분석 AI</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- User Info -->
+        <div class="p-4 border-b bg-gray-50" id="userInfo">
+            <div class="flex items-center">
+                <div class="h-8 w-8 bg-blue-500 rounded-full flex items-center justify-center">
+                    <i class="fas fa-user text-white text-sm"></i>
+                </div>
+                <div class="ml-3 flex-1">
+                    <p class="text-sm font-medium" id="userName">로그인이 필요합니다</p>
+                    <p class="text-xs text-gray-500" id="userRole">-</p>
+                </div>
+                <button onclick="logout()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Navigation -->
+        <div class="p-4 border-b">
+            <button onclick="newChat()" class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 flex items-center justify-center">
+                <i class="fas fa-plus mr-2"></i>
+                새 검색
+            </button>
+        </div>
+        
+        <!-- Admin Panel -->
+        <div class="p-4 border-b hidden" id="adminPanel">
+            <button onclick="window.location.href='/admin'" class="w-full bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 flex items-center justify-center">
+                <i class="fas fa-cog mr-2"></i>
+                관리자 패널
+            </button>
+        </div>
+        
+        <!-- Search History -->
+        <div class="flex-1 overflow-y-auto">
+            <div class="p-4">
+                <h3 class="text-sm font-medium text-gray-700 mb-3">검색 기록</h3>
+                <div id="searchHistory" class="space-y-2">
+                    <p class="text-xs text-gray-500">검색 기록이 없습니다.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col">
+        <!-- Header -->
+        <div class="bg-white border-b p-4">
+            <div class="flex items-center justify-between">
+                <h2 class="text-xl font-semibold">특허 검색</h2>
+                <div class="flex items-center space-x-2">
+                    <span class="text-sm text-gray-500" id="statusIndicator">준비됨</span>
+                    <div class="h-2 w-2 bg-green-500 rounded-full" id="statusDot"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Chat Area -->
+        <div class="flex-1 overflow-y-auto p-4" id="chatArea">
+            <div class="max-w-4xl mx-auto">
+                <div id="welcomeMessage" class="text-center py-20">
+                    <div class="mb-6">
+                        <i class="fas fa-microscope text-6xl text-blue-500 mb-4"></i>
+                        <h2 class="text-2xl font-bold text-gray-800 mb-2">Pat.AI에 오신 것을 환영합니다</h2>
+                        <p class="text-gray-600">특허 문서에 대해 질문해보세요. AI가 관련 정보를 찾아 답변해드립니다.</p>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
+                        <div class="bg-white p-4 rounded-lg shadow border border-gray-200">
+                            <i class="fas fa-search text-blue-500 mb-2"></i>
+                            <h3 class="font-medium">특허 검색</h3>
+                            <p class="text-sm text-gray-600">키워드로 관련 특허를 검색하세요</p>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg shadow border border-gray-200">
+                            <i class="fas fa-chart-bar text-green-500 mb-2"></i>
+                            <h3 class="font-medium">기술 분석</h3>
+                            <p class="text-sm text-gray-600">기술 동향과 특허 현황을 분석</p>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg shadow border border-gray-200">
+                            <i class="fas fa-lightbulb text-yellow-500 mb-2"></i>
+                            <h3 class="font-medium">혁신 아이디어</h3>
+                            <p class="text-sm text-gray-600">기존 특허 분석으로 새로운 아이디어 발굴</p>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg shadow border border-gray-200">
+                            <i class="fas fa-shield-alt text-red-500 mb-2"></i>
+                            <h3 class="font-medium">IP 보호</h3>
+                            <p class="text-sm text-gray-600">지적재산권 보호 전략 수립</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="chatMessages" class="space-y-4">
+                    <!-- Messages will be inserted here -->
+                </div>
+            </div>
+        </div>
+        
+        <!-- Input Area -->
+        <div class="bg-white border-t p-4">
+            <div class="max-w-4xl mx-auto">
+                <form id="searchForm" class="flex space-x-4">
+                    <input type="text" 
+                           id="searchInput" 
+                           placeholder="특허에 대해 질문하세요..." 
+                           class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                           disabled>
+                    <button type="submit" 
+                            id="searchButton"
+                            class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+                            disabled>
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Login Required Modal -->
+<div id="loginModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden">
+    <div class="flex items-center justify-center min-h-screen">
+        <div class="bg-white p-6 rounded-lg shadow-xl">
+            <h3 class="text-lg font-medium mb-4">로그인이 필요합니다</h3>
+            <p class="text-gray-600 mb-6">Pat.AI를 사용하려면 로그인하세요.</p>
+            <div class="flex space-x-4">
+                <a href="/login" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">로그인</a>
+                <a href="/register" class="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400">회원가입</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/chat.js"></script>
+{% endblock %}

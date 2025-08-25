@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block title %}로그인 - Pat.AI{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full space-y-8">
+        <div>
+            <div class="mx-auto h-16 w-16 bg-blue-600 rounded-full flex items-center justify-center">
+                <i class="fas fa-microscope text-white text-2xl"></i>
+            </div>
+            <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
+                Pat.AI
+            </h2>
+            <p class="mt-2 text-center text-sm text-gray-600">
+                특허분석 AI 시스템에 로그인하세요
+            </p>
+        </div>
+        
+        <form class="mt-8 space-y-6" id="loginForm">
+            <div class="rounded-md shadow-sm -space-y-px">
+                <div>
+                    <input id="username" name="username" type="text" required 
+                           class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm" 
+                           placeholder="사용자명">
+                </div>
+                <div>
+                    <input id="password" name="password" type="password" required 
+                           class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm" 
+                           placeholder="비밀번호">
+                </div>
+            </div>
+
+            <div id="errorMessage" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded"></div>
+
+            <div>
+                <button type="submit" 
+                        class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    <span class="absolute left-0 inset-y-0 flex items-center pl-3">
+                        <i class="fas fa-lock text-blue-500 group-hover:text-blue-400" aria-hidden="true"></i>
+                    </span>
+                    로그인
+                </button>
+            </div>
+
+            <div class="text-center">
+                <p class="text-sm text-gray-600">
+                    계정이 없으신가요? 
+                    <a href="/register" class="font-medium text-blue-600 hover:text-blue-500">
+                        회원가입
+                    </a>
+                </p>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('loginForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const errorDiv = document.getElementById('errorMessage');
+    
+    // Convert FormData to URLSearchParams for proper encoding
+    const params = new URLSearchParams();
+    for (const [key, value] of formData.entries()) {
+        params.append(key, value);
+    }
+    
+    try {
+        const response = await axios.post('/api/auth/login', params, {
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            }
+        });
+        
+        if (response.data.access_token) {
+            localStorage.setItem('token', response.data.access_token);
+            localStorage.setItem('user', JSON.stringify(response.data.user));
+            window.location.href = '/';
+        }
+    } catch (error) {
+        console.error('Login error:', error);
+        let errorMessage = '로그인에 실패했습니다.';
+        
+        if (error.response && error.response.data) {
+            if (typeof error.response.data === 'string') {
+                errorMessage = error.response.data;
+            } else if (error.response.data.detail) {
+                if (Array.isArray(error.response.data.detail)) {
+                    errorMessage = error.response.data.detail.map(e => e.msg).join(', ');
+                } else {
+                    errorMessage = error.response.data.detail;
+                }
+            }
+        }
+        
+        errorDiv.textContent = errorMessage;
+        errorDiv.classList.remove('hidden');
+    }
+});
+</script>
+{% endblock %}
