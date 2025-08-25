@@ -240,6 +240,11 @@ async function handleUpload(e) {
                     errorMessage = error.response.data.detail;
                 }
             }
+            // PDF 관련 에러 특별 처리 및 아이콘 추가
+            if (errorMessage.includes('PDF') || errorMessage.includes('pdf') || 
+                errorMessage.includes('유효하지 않') || errorMessage.includes('파일이 아닙니다')) {
+                errorMessage = '📄 ' + errorMessage;
+            }
         } else if (error.message) {
             errorMessage = error.message;
         }
@@ -333,6 +338,11 @@ async function processDocument(documentId) {
         
         if (error.response && error.response.data) {
             errorMessage = error.response.data.detail || errorMessage;
+            // 문서 처리 관련 에러 특별 처리
+            if (errorMessage.includes('PDF') || errorMessage.includes('손상된') || 
+                errorMessage.includes('올바르지 않습니다') || errorMessage.includes('파일이 아닙니다')) {
+                errorMessage = '⚠️ ' + errorMessage;
+            }
         } else if (error.message) {
             errorMessage = error.message;
         }
@@ -383,6 +393,11 @@ async function addSampleData() {
         
         if (error.response && error.response.data) {
             errorMessage = error.response.data.detail || errorMessage;
+            // 데이터베이스 관련 에러 특별 처리
+            if (errorMessage.includes('database') || errorMessage.includes('데이터베이스') ||
+                errorMessage.includes('embedding') || errorMessage.includes('vector')) {
+                errorMessage = '🗃️ ' + errorMessage;
+            }
         } else if (error.message) {
             errorMessage = error.message;
         }

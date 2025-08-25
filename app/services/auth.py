@@ -2,11 +2,13 @@
 
 from datetime import datetime, timedelta
 from typing import Optional
+
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from sqlalchemy.orm import Session
-from app.models.database import User
+
 from app.config import settings
+from app.models.database import User
 
 # Password hashing context
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -40,14 +42,18 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     else:
         expire = datetime.utcnow() + timedelta(minutes=15)
     to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, settings.secret_key, algorithm=settings.algorithm)
+    encoded_jwt = jwt.encode(
+        to_encode, settings.secret_key, algorithm=settings.algorithm
+    )
     return encoded_jwt
 
 
 def verify_token(token: str) -> Optional[str]:
     """Verify a token and return username."""
     try:
-        payload = jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
+        payload = jwt.decode(
+            token, settings.secret_key, algorithms=[settings.algorithm]
+        )
         username: str = payload.get("sub")
         if username is None:
             return None
@@ -56,13 +62,15 @@ def verify_token(token: str) -> Optional[str]:
         return None
 
 
-def create_user(db: Session, username: str, password: str, name: str, email: str = None) -> User:
+def create_user(
+    db: Session, username: str, password: str, name: str, email: str = None
+) -> User:
     """Create a new user."""
     # Check if user already exists
     existing_user = db.query(User).filter(User.username == username).first()
     if existing_user:
         raise ValueError("Username already exists")
-    
+
     # Create new user
     hashed_password = get_password_hash(password)
     user = User(
@@ -70,7 +78,7 @@ def create_user(db: Session, username: str, password: str, name: str, email: str
         name=name,
         email=email,
         password_hash=hashed_password,
-        role="user"
+        role="user",
     )
     db.add(user)
     db.commit()

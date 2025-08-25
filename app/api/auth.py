@@ -1,13 +1,20 @@
 """Authentication API endpoints."""
 
 from datetime import timedelta
-from fastapi import APIRouter, Depends, HTTPException, status, Form
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from sqlalchemy.orm import Session
+
+from fastapi import APIRouter, Depends, Form, HTTPException, status
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel
-from app.models import get_db, User
-from app.services.auth import authenticate_user, create_access_token, create_user, get_current_user
+from sqlalchemy.orm import Session
+
 from app.config import settings
+from app.models import get_db
+from app.services.auth import (
+    authenticate_user,
+    create_access_token,
+    create_user,
+    get_current_user,
+)
 
 router = APIRouter()
 security = HTTPBearer()
@@ -30,9 +37,7 @@ class UserResponse(BaseModel):
 
 @router.post("/login", response_model=Token)
 async def login(
-    username: str = Form(...),
-    password: str = Form(...),
-    db: Session = Depends(get_db)
+    username: str = Form(...), password: str = Form(...), db: Session = Depends(get_db)
 ):
     """User login endpoint."""
     user = authenticate_user(db, username, password)
@@ -42,12 +47,12 @@ async def login(
             detail="Incorrect username or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    
+
     access_token_expires = timedelta(minutes=settings.access_token_expire_minutes)
     access_token = create_access_token(
         data={"sub": user.username}, expires_delta=access_token_expires
     )
-    
+
     return {
         "access_token": access_token,
         "token_type": "bearer",
@@ -57,8 +62,8 @@ async def login(
             "name": user.name,
             "email": user.email,
             "role": user.role,
-            "profile_image": user.profile_image
-        }
+            "profile_image": user.profile_image,
+        },
     }
 
 
@@ -68,7 +73,7 @@ async def register(
     password: str = Form(...),
     name: str = Form(...),
     email: str = Form(None),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """User registration endpoint."""
     try:
@@ -79,19 +84,16 @@ async def register(
             name=user.name,
             email=user.email,
             role=user.role,
-            profile_image=user.profile_image
+            profile_image=user.profile_image,
         )
     except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
 @router.get("/me", response_model=UserResponse)
 async def read_users_me(
     credentials: HTTPAuthorizationCredentials = Depends(security),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """Get current user info."""
     user = get_current_user(db, credentials.credentials)
@@ -101,20 +103,20 @@ async def read_users_me(
             detail="Could not validate credentials",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    
+
     return UserResponse(
         id=user.id,
         username=user.username,
         name=user.name,
         email=user.email,
         role=user.role,
-        profile_image=user.profile_image
+        profile_image=user.profile_image,
     )
 
 
 async def get_current_user_dependency(
     credentials: HTTPAuthorizationCredentials = Depends(security),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """Dependency to get current user."""
     user = get_current_user(db, credentials.credentials)
